@@ -1,6 +1,6 @@
 # lidar_euclidean_cluster_detect
 
-The purpose of this package is to detect individual objects in pointcloud data.
+The purpose of this package is to detect individual objects in pointcloud data.(这个包的目的是检测点云数据中的单个物体)
 Points are grouped into clusters based on proximity and published as detected objects.
 
 NOTE: A new version of this package is available in autoware.auto.
