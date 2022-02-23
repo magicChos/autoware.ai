@@ -29,74 +29,74 @@
 #include "autoware_msgs/VehicleStatus.h"
 #include "can_vehicle_info.h"
 
-namespace autoware_connector
-{
-struct Odometry
-{
-  double x;
-  double y;
-  double th;
-  ros::Time stamp;
+namespace autoware_connector {
 
-  Odometry(const ros::Time& time)
-  {
-    x = 0.0;
-    y = 0.0;
-    th = 0.0;
-    stamp = time;
-  }
+// 自定义Odometry结构体，包含(x,y,theta,timestamp)
+struct Odometry {
+    double x;
+    double y;
+    double th;
+    ros::Time stamp;
 
-  void updateOdometry(const double vx, const double vth, const ros::Time& cur_time)
-  {
-    if (stamp.sec == 0 && stamp.nsec == 0)
+    Odometry(const ros::Time &time)
     {
-      stamp = cur_time;
+        x = 0.0;
+        y = 0.0;
+        th = 0.0;
+        stamp = time;
     }
-    double dt = (cur_time - stamp).toSec();
-    double delta_x = (vx * cos(th)) * dt;
-    double delta_y = (vx * sin(th)) * dt;
-    double delta_th = vth * dt;
 
-    ROS_INFO("dt : %f delta (x y th) : (%f %f %f %f)", dt, delta_x, delta_y, delta_th);
+    void updateOdometry(const double vx, const double vth, const ros::Time &cur_time)
+    {
+        if (stamp.sec == 0 && stamp.nsec == 0)
+        {
+            stamp = cur_time;
+        }
+        double dt = (cur_time - stamp).toSec();
+        double delta_x = (vx * cos(th)) * dt;
+        double delta_y = (vx * sin(th)) * dt;
+        double delta_th = vth * dt;
 
-    x += delta_x;
-    y += delta_y;
-    th += delta_th;
-    stamp = cur_time;
-  }
+        ROS_INFO("dt : %f delta (x y th) : (%f %f %f %f)", dt, delta_x, delta_y, delta_th);
+
+        x += delta_x;
+        y += delta_y;
+        th += delta_th;
+        stamp = cur_time;
+    }
 };
 
 class CanOdometryNode
 {
 public:
-  CanOdometryNode();
-  ~CanOdometryNode();
+    CanOdometryNode();
+    ~CanOdometryNode();
 
-  void run();
+    void run();
 
 private:
-  // handle
-  ros::NodeHandle nh_;
-  ros::NodeHandle private_nh_;
+    // handle
+    ros::NodeHandle nh_;
+    ros::NodeHandle private_nh_;
 
-  // publisher
-  ros::Publisher pub1_;
+    // publisher
+    ros::Publisher pub1_;
 
-  // subscriber
-  ros::Subscriber sub1_;
+    // subscriber
+    ros::Subscriber sub1_;
 
-  // variables
-  VehicleInfo v_info_;
-  Odometry odom_;
+    // variables
+    VehicleInfo v_info_;
+    Odometry odom_;
 
-  // callbacks
-  void callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr& msg);
+    // callbacks
+    void callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr &msg);
 
-  // initializer
-  void initForROS();
+    // initializer
+    void initForROS();
 
-  // functions
-  void publishOdometry(const autoware_msgs::VehicleStatusConstPtr& msg);
+    // functions
+    void publishOdometry(const autoware_msgs::VehicleStatusConstPtr &msg);
 };
-}
-#endif  // CAN_ODOMETRY_CORE_H
+} // namespace autoware_connector
+#endif // CAN_ODOMETRY_CORE_H

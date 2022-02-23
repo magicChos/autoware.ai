@@ -16,12 +16,12 @@
 
 #include "can_odometry_core.h"
 
-namespace autoware_connector
-{
+namespace autoware_connector {
 // Constructor
-CanOdometryNode::CanOdometryNode() : private_nh_("~"), v_info_(), odom_(ros::Time::now())
+CanOdometryNode::CanOdometryNode() :
+    private_nh_("~"), v_info_(), odom_(ros::Time::now())
 {
-  initForROS();
+    initForROS();
 }
 
 // Destructor
@@ -31,63 +31,63 @@ CanOdometryNode::~CanOdometryNode()
 
 void CanOdometryNode::initForROS()
 {
-  // ros parameter settings
-  if (!nh_.hasParam("/vehicle_info/wheel_base"))
-  {
-    v_info_.is_stored = false;
-    ROS_INFO("vehicle_info is not set");
-  }
-  else
-  {
-    private_nh_.getParam("/vehicle_info/wheel_base", v_info_.wheel_base);
-    // ROS_INFO_STREAM("wheel_base : " << wheel_base);
+    // ros parameter settings
+    if (!nh_.hasParam("/vehicle_info/wheel_base"))
+    {
+        v_info_.is_stored = false;
+        ROS_INFO("vehicle_info is not set");
+    }
+    else
+    {
+        private_nh_.getParam("/vehicle_info/wheel_base", v_info_.wheel_base);
+        // ROS_INFO_STREAM("wheel_base : " << wheel_base);
 
-    v_info_.is_stored = true;
-  }
+        v_info_.is_stored = true;
+    }
 
-  // setup subscriber
-  sub1_ = nh_.subscribe("vehicle_status", 10, &CanOdometryNode::callbackFromVehicleStatus, this);
+    // setup subscriber
+    sub1_ = nh_.subscribe("vehicle_status", 10, &CanOdometryNode::callbackFromVehicleStatus, this);
 
-  // setup publisher
-  pub1_ = nh_.advertise<nav_msgs::Odometry>("/vehicle/odom", 10);
+    // setup publisher
+    pub1_ = nh_.advertise<nav_msgs::Odometry>("/vehicle/odom", 10);
 }
 
 void CanOdometryNode::run()
 {
-  ros::spin();
+    ros::spin();
 }
 
-void CanOdometryNode::publishOdometry(const autoware_msgs::VehicleStatusConstPtr& msg)
+void CanOdometryNode::publishOdometry(const autoware_msgs::VehicleStatusConstPtr &msg)
 {
-  double vx = kmph2mps(msg->speed);
-  double vth = v_info_.convertSteeringAngleToAngularVelocity(kmph2mps(msg->speed), msg->angle);
-  odom_.updateOdometry(vx, vth, msg->header.stamp);
+    double vx = kmph2mps(msg->speed);
+    double vth = v_info_.convertSteeringAngleToAngularVelocity(kmph2mps(msg->speed), msg->angle);
+    odom_.updateOdometry(vx, vth, msg->header.stamp);
 
-  geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_.th);
+    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_.th);
 
-  // next, we'll publish the odometry message over ROS
-  nav_msgs::Odometry odom;
-  odom.header.stamp = msg->header.stamp;
-  odom.header.frame_id = "odom";
+    // next, we'll publish the odometry message over ROS
+    nav_msgs::Odometry odom;
+    odom.header.stamp = msg->header.stamp;
+    odom.header.frame_id = "odom";
 
-  // set the position
-  odom.pose.pose.position.x = odom_.x;
-  odom.pose.pose.position.y = odom_.y;
-  odom.pose.pose.position.z = 0.0;
-  odom.pose.pose.orientation = odom_quat;
+    // set the position
+    odom.pose.pose.position.x = odom_.x;
+    odom.pose.pose.position.y = odom_.y;
+    odom.pose.pose.position.z = 0.0;
+    odom.pose.pose.orientation = odom_quat;
 
-  // set the velocity
-  odom.child_frame_id = "base_link";
-  odom.twist.twist.linear.x = vx;
-  odom.twist.twist.angular.z = vth;
+    // set the velocity
+    odom.child_frame_id = "base_link";
+    odom.twist.twist.linear.x = vx;
+    odom.twist.twist.angular.z = vth;
 
-  // publish the message
-  pub1_.publish(odom);
+    // publish the message
+    pub1_.publish(odom);
 }
 
-void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr& msg)
+void CanOdometryNode::callbackFromVehicleStatus(const autoware_msgs::VehicleStatusConstPtr &msg)
 {
-  publishOdometry(msg);
+    publishOdometry(msg);
 }
 
-}  // autoware_connector
+} // namespace autoware_connector

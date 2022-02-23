@@ -19,11 +19,11 @@
 
 #include "can_odometry_core.h"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "can_odometry");
-  autoware_connector::CanOdometryNode n;
-  n.run();
+    ros::init(argc, argv, "can_odometry");
+    autoware_connector::CanOdometryNode n;
+    n.run();
 
-  return 0;
+    return 0;
 }
