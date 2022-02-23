@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(roi_object_filter)
 
+find_package(yaml-cpp REQUIRED)
+# 设置动态库
+set(YAML_CPP_LIBRARIES /usr/local/lib/libyaml-cpp.so)
+
 find_package(catkin REQUIRED COMPONENTS
   autoware_build_flags
   autoware_msgs
