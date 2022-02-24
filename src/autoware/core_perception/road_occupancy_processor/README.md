@@ -2,7 +2,7 @@
 
 This package generates the occupancy grid indicating the status of the road. It uses the point cloud from a filtered sensor and the ADAS Map data.
 
-The occupancy grid can be conceptualized as a one dimensional 8-bit depth bitmap.
+The occupancy grid can be conceptualized as a one dimensional 8-bit depth bitmap.(占用网格可以概念化为一维 8 位深度位图)
 
 This package publishes a GridMap/OccupancyGrid with four different possible values:
 - UNKNOWN
