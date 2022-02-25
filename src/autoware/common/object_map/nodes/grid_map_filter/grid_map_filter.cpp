@@ -16,19 +16,18 @@
 
 #include "grid_map_filter.h"
 
-namespace object_map
-{
+namespace object_map {
 
 // Constructor
-  GridMapFilter::GridMapFilter() :
-      private_node_handle_("~")
-  {
+GridMapFilter::GridMapFilter() :
+    private_node_handle_("~")
+{
     InitializeROSIo();
     LoadRoadAreasFromVectorMap(private_node_handle_, area_points_);
-  }
+}
 
-  void GridMapFilter::InitializeROSIo()
-  {
+void GridMapFilter::InitializeROSIo()
+{
     private_node_handle_.param<std::string>("map_frame", map_frame_, "map");
     private_node_handle_.param<std::string>("map_topic", map_topic_, "/realtime_cost_map");
     private_node_handle_.param<double>("dist_transform_distance", dist_transform_distance_, 3.0);
@@ -42,17 +41,15 @@ namespace object_map
                                                                  &GridMapFilter::OccupancyGridCallback, this);
 
     grid_map_pub_ = nh_.advertise<grid_map_msgs::GridMap>("filtered_grid_map", 1, true);
+}
 
-  }
-
-
-  void GridMapFilter::Run()
-  {
+void GridMapFilter::Run()
+{
     ros::spin();
-  }
+}
 
-  void GridMapFilter::OccupancyGridCallback(const nav_msgs::OccupancyGridConstPtr &in_message)
-  {
+void GridMapFilter::OccupancyGridCallback(const nav_msgs::OccupancyGridConstPtr &in_message)
+{
     // timer start
     //auto start = std::chrono::system_clock::now();
 
@@ -66,25 +63,25 @@ namespace object_map
     // apply distance transform to OccupancyGrid
     if (use_dist_transform_)
     {
-      CreateDistanceTransformLayer(map, original_layer);
+        CreateDistanceTransformLayer(map, original_layer);
     }
 
     // fill polygon
     if (!area_points_.empty() && use_wayarea_)
     {
-      FillPolygonAreas(map, area_points_, grid_road_layer_, OCCUPANCY_NO_ROAD, OCCUPANCY_ROAD, grid_min_value_,
-                       grid_max_value_, map.getFrameId(), map_frame_, tf_listener_);
+        FillPolygonAreas(map, area_points_, grid_road_layer_, OCCUPANCY_NO_ROAD, OCCUPANCY_ROAD, grid_min_value_,
+                         grid_max_value_, map.getFrameId(), map_frame_, tf_listener_);
 
-      map["dist_wayarea"] = map["distance_transform"] + map["wayarea"];
+        map["dist_wayarea"] = map["distance_transform"] + map["wayarea"];
     }
 
     // fill circle
     if (use_fill_circle_)
     {
-      int cost_threshold = fill_circle_cost_thresh_;
-      // convert to cv image size
-      int radius = circle_radius_ / map.getResolution();
-      DrawCirclesInLayer(map, original_layer, cost_threshold, radius);
+        int cost_threshold = fill_circle_cost_thresh_;
+        // convert to cv image size
+        int radius = circle_radius_ / map.getResolution();
+        DrawCirclesInLayer(map, original_layer, cost_threshold, radius);
     }
 
     // publish grid map as ROS message
@@ -94,15 +91,15 @@ namespace object_map
     //auto end = std::chrono::system_clock::now();
     //auto usec = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     //std::cout << "time: " << usec / 1000.0 << " [msec]" << std::endl;
-  }
+}
 
-  void GridMapFilter::CreateDistanceTransformLayer(grid_map::GridMap &out_grid_map, const std::string &in_layer)
-  {
+void GridMapFilter::CreateDistanceTransformLayer(grid_map::GridMap &out_grid_map, const std::string &in_layer)
+{
     cv::Mat original_image;
     if (!out_grid_map.exists(in_layer))
     {
-      ROS_INFO("%s layer not yet available", in_layer.c_str());
-      return;
+        ROS_INFO("%s layer not yet available", in_layer.c_str());
+        return;
     }
     grid_map::GridMapCvConverter::toImage<unsigned char, 1>(out_grid_map,
                                                             in_layer,
@@ -132,20 +129,20 @@ namespace object_map
 
     for (int y = 0; y < dt_image.rows; y++)
     {
-      for (int x = 0; x < dt_image.cols; x++)
-      {
-        // actual distance [meter]
-        double dist = dt_image.at<float>(y, x) * resolution;
-        if (dist > max_dist)
-          dist = max_dist;
+        for (int x = 0; x < dt_image.cols; x++)
+        {
+            // actual distance [meter]
+            double dist = dt_image.at<float>(y, x) * resolution;
+            if (dist > max_dist)
+                dist = max_dist;
 
-        // Make value range 0 ~ 255
-        int round_dist = dist / max_dist * grid_max_value_;
-        int inv_round_dist = grid_max_value_ - round_dist;
+            // Make value range 0 ~ 255
+            int round_dist = dist / max_dist * grid_max_value_;
+            int inv_round_dist = grid_max_value_ - round_dist;
 
-        dt_int_image.at<unsigned char>(y, x) = round_dist;
-        dt_int_inv_image.at<unsigned char>(y, x) = inv_round_dist;
-      }
+            dt_int_image.at<unsigned char>(y, x) = round_dist;
+            dt_int_inv_image.at<unsigned char>(y, x) = inv_round_dist;
+        }
     }
 
     // convert to ROS msg
@@ -154,13 +151,13 @@ namespace object_map
                                                                       out_grid_map,
                                                                       grid_min_value_,
                                                                       grid_max_value_);
-  }
+}
 
-  void GridMapFilter::DrawCirclesInLayer(grid_map::GridMap &out_gridmap,
-                                         const std::string &in_layer_name,
-                                         double in_draw_threshold,
-                                         double in_radius)
-  {
+void GridMapFilter::DrawCirclesInLayer(grid_map::GridMap &out_gridmap,
+                                       const std::string &in_layer_name,
+                                       double in_draw_threshold,
+                                       double in_radius)
+{
     cv::Mat original_image;
 
     grid_map::GridMapCvConverter::toImage<unsigned char, 1>(out_gridmap,
@@ -174,16 +171,16 @@ namespace object_map
 
     for (int y = 0; y < original_image.rows; y++)
     {
-      for (int x = 0; x < original_image.cols; x++)
-      {
-        // uchar -> int
-        int data = original_image.at<unsigned char>(y, x);
-
-        if (data > fill_circle_cost_thresh_)
+        for (int x = 0; x < original_image.cols; x++)
         {
-          cv::circle(filled_image, cv::Point(x, y), in_radius, cv::Scalar(OCCUPANCY_CIRCLE), -1, CV_AA);
+            // uchar -> int
+            int data = original_image.at<unsigned char>(y, x);
+
+            if (data > fill_circle_cost_thresh_)
+            {
+                cv::circle(filled_image, cv::Point(x, y), in_radius, cv::Scalar(OCCUPANCY_CIRCLE), -1, CV_AA);
+            }
         }
-      }
     }
     // convert to ROS msg
     grid_map::GridMapCvConverter::addLayerFromImage<unsigned char, 1>(filled_image,
@@ -191,7 +188,6 @@ namespace object_map
                                                                       out_gridmap,
                                                                       grid_min_value_,
                                                                       grid_max_value_);
-  }
+}
 
-
-}  // namespace object_map
+} // namespace object_map
