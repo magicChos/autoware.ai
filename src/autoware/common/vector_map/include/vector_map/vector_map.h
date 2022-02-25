@@ -223,6 +223,7 @@ public:
     }
 };
 
+// c++种可调用实体的一种类型安全的包裹
 template <class T, class U>
 using Updater = std::function<void(std::map<Key<T>, T> &, const U &)>;
 
